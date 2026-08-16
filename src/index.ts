@@ -6,6 +6,7 @@ import { pool } from "./db";
 import { registerAuthenticate } from "./middleware/authenticate";
 import authRoutes from "./routes/auth.routes";
 import productsRoutes from "./routes/products.routes";
+import cartRoutes from "./routes/cart.routes";
 import {
   UnauthorizedError,
   ForbiddenError,
@@ -44,6 +45,7 @@ app.get("/health/db", async (request, reply) => {
 
 app.register(authRoutes);
 app.register(productsRoutes);
+app.register(cartRoutes);
 
 app.setErrorHandler((error, request, reply) => {
   if (error.validation) {
