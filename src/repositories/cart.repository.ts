@@ -1,3 +1,4 @@
+import { Pool, PoolClient } from "pg";
 import { pool } from "../db";
 
 export async function upsertCartItem(
@@ -16,8 +17,11 @@ export async function upsertCartItem(
   return result.rows[0];
 }
 
-export async function findCartByUser(userId: number) {
-  const result = await pool.query(
+export async function findCartByUser(
+  userId: number,
+  client: Pool | PoolClient = pool
+) {
+  const result = await client.query(
     `SELECT ci.product_id, ci.quantity, p.name, p.price, p.discount_price, p.image_url, p.stock_quantity
      FROM cart_items ci
      JOIN products p ON p.id = ci.product_id
@@ -26,6 +30,10 @@ export async function findCartByUser(userId: number) {
     [userId]
   );
   return result.rows;
+}
+
+export async function clearCart(userId: number, client: Pool | PoolClient = pool) {
+  await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
 }
 
 export async function setCartItemQuantity(
