@@ -32,7 +32,9 @@ declare module "@fastify/jwt" {
 const app = Fastify({ logger: true });
 const port = Number(process.env.PORT) || 4000;
 
-app.register(cors);
+app.register(cors, {
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+});
 app.register(jwt, { secret: process.env.JWT_SECRET as string });
 registerAuthenticate(app);
 
