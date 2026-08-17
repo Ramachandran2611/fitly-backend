@@ -2,6 +2,8 @@ import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import { pool } from "./db";
 import { registerAuthenticate } from "./middleware/authenticate";
 import authRoutes from "./routes/auth.routes";
@@ -37,6 +39,34 @@ app.register(cors, {
 });
 app.register(jwt, { secret: process.env.JWT_SECRET as string });
 registerAuthenticate(app);
+
+app.register(swagger, {
+  openapi: {
+    info: {
+      title: "Fitly API",
+      description: "REST API for the Fitly gym-supplements store",
+      version: "1.0.0",
+    },
+    servers: [{ url: `http://localhost:${port}` }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    tags: [
+      { name: "Auth", description: "Registration and login" },
+      { name: "Products", description: "Catalog browsing" },
+      { name: "Cart", description: "Shopping cart" },
+      { name: "Addresses", description: "Shipping addresses" },
+      { name: "Orders", description: "Checkout and order lifecycle" },
+    ],
+  },
+});
+app.register(swaggerUi, { routePrefix: "/docs" });
 
 app.get("/health", async (request, reply) => {
   return { status: "ok" };

@@ -2,6 +2,9 @@ import { FastifyInstance } from "fastify";
 import * as addressesController from "../controllers/addresses.controller";
 
 const createAddressSchema = {
+  tags: ["Addresses"],
+  summary: "Add a shipping address",
+  security: [{ bearerAuth: [] }],
   body: {
     type: "object",
     required: ["line1", "city", "state", "pincode", "phone"],
@@ -15,6 +18,12 @@ const createAddressSchema = {
   },
 };
 
+const listAddressesSchema = {
+  tags: ["Addresses"],
+  summary: "List the current user's addresses",
+  security: [{ bearerAuth: [] }],
+};
+
 export default async function addressesRoutes(app: FastifyInstance) {
   app.post(
     "/addresses",
@@ -22,5 +31,9 @@ export default async function addressesRoutes(app: FastifyInstance) {
     addressesController.createAddress
   );
 
-  app.get("/addresses", { preHandler: app.authenticate }, addressesController.listAddresses);
+  app.get(
+    "/addresses",
+    { schema: listAddressesSchema, preHandler: app.authenticate },
+    addressesController.listAddresses
+  );
 }

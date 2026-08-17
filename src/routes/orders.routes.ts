@@ -2,6 +2,9 @@ import { FastifyInstance } from "fastify";
 import * as ordersController from "../controllers/orders.controller";
 
 const checkoutSchema = {
+  tags: ["Orders"],
+  summary: "Checkout the current cart into a new order",
+  security: [{ bearerAuth: [] }],
   body: {
     type: "object",
     required: ["addressId"],
@@ -11,7 +14,16 @@ const checkoutSchema = {
   },
 };
 
+const listOrdersSchema = {
+  tags: ["Orders"],
+  summary: "List the current user's orders",
+  security: [{ bearerAuth: [] }],
+};
+
 const idParamSchema = {
+  tags: ["Orders"],
+  summary: "Get a single order by id",
+  security: [{ bearerAuth: [] }],
   params: {
     type: "object",
     required: ["id"],
@@ -23,6 +35,7 @@ const idParamSchema = {
 
 const paySchema = {
   ...idParamSchema,
+  summary: "Pay for an order (mocked payment)",
   body: {
     type: "object",
     properties: {
@@ -38,7 +51,11 @@ export default async function ordersRoutes(app: FastifyInstance) {
     ordersController.checkout
   );
 
-  app.get("/orders", { preHandler: app.authenticate }, ordersController.listOrders);
+  app.get(
+    "/orders",
+    { schema: listOrdersSchema, preHandler: app.authenticate },
+    ordersController.listOrders
+  );
 
   app.get(
     "/orders/:id",
@@ -54,25 +71,31 @@ export default async function ordersRoutes(app: FastifyInstance) {
 
   app.post(
     "/orders/:id/cancel",
-    { schema: idParamSchema, preHandler: app.authenticate },
+    { schema: { ...idParamSchema, summary: "Cancel a pending order" }, preHandler: app.authenticate },
     ordersController.cancelOrder
   );
 
   app.post(
     "/orders/:id/mark-delivered",
-    { schema: idParamSchema, preHandler: app.authenticate },
+    {
+      schema: { ...idParamSchema, summary: "Mark a paid order as delivered" },
+      preHandler: app.authenticate,
+    },
     ordersController.markDelivered
   );
 
   app.post(
     "/orders/:id/return",
-    { schema: idParamSchema, preHandler: app.authenticate },
+    { schema: { ...idParamSchema, summary: "Return a delivered order" }, preHandler: app.authenticate },
     ordersController.returnOrder
   );
 
   app.post(
     "/orders/:id/refund",
-    { schema: idParamSchema, preHandler: app.authenticate },
+    {
+      schema: { ...idParamSchema, summary: "Refund a returned/cancelled order" },
+      preHandler: app.authenticate,
+    },
     ordersController.refundOrder
   );
 }

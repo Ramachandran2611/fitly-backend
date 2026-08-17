@@ -2,6 +2,8 @@ import { FastifyInstance } from "fastify";
 import * as productsController from "../controllers/products.controller";
 
 const listProductsSchema = {
+  tags: ["Products"],
+  summary: "List products, with optional search/filter/sort",
   querystring: {
     type: "object",
     properties: {
@@ -21,6 +23,8 @@ const listProductsSchema = {
 };
 
 const idParamSchema = {
+  tags: ["Products"],
+  summary: "Get a single product by id",
   params: {
     type: "object",
     required: ["id"],
@@ -30,8 +34,13 @@ const idParamSchema = {
   },
 };
 
+const listCategoriesSchema = {
+  tags: ["Products"],
+  summary: "List categories",
+};
+
 export default async function productsRoutes(app: FastifyInstance) {
   app.get("/products", { schema: listProductsSchema }, productsController.listProducts);
   app.get("/products/:id", { schema: idParamSchema }, productsController.getProduct);
-  app.get("/categories", productsController.listCategories);
+  app.get("/categories", { schema: listCategoriesSchema }, productsController.listCategories);
 }
