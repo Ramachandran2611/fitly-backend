@@ -1,5 +1,5 @@
 import "dotenv/config";
-import Fastify from "fastify";
+import Fastify, { type FastifyError } from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import swagger from "@fastify/swagger";
@@ -31,13 +31,20 @@ declare module "@fastify/jwt" {
   }
 }
 
+if (!process.env.JWT_SECRET || !process.env.DATABASE_URL) {
+  console.error("Missing required env var: JWT_SECRET and DATABASE_URL must both be set");
+  process.exit(1);
+}
+
 const app = Fastify({ logger: true });
 const port = Number(process.env.PORT) || 4000;
+const apiBaseUrl = process.env.API_BASE_URL ?? `http://localhost:${port}`;
 
 app.register(cors, {
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true,
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
-app.register(jwt, { secret: process.env.JWT_SECRET as string });
+app.register(jwt, { secret: process.env.JWT_SECRET });
 registerAuthenticate(app);
 
 app.register(swagger, {
@@ -47,7 +54,7 @@ app.register(swagger, {
       description: "REST API for the Fitly gym-supplements store",
       version: "1.0.0",
     },
-    servers: [{ url: `http://localhost:${port}` }],
+    servers: [{ url: apiBaseUrl }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -83,7 +90,7 @@ app.register(cartRoutes);
 app.register(addressesRoutes);
 app.register(ordersRoutes);
 
-app.setErrorHandler((error, request, reply) => {
+app.setErrorHandler((error: FastifyError, request, reply) => {
   if (error.validation) {
     reply.code(422).send({ error: error.message });
     return;
